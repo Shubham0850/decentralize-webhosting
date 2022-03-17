@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Decentralized WebHosting using IPFS</title>
+      <!-- Google fonts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&display=swap" rel="stylesheet">
+      <!-- Import stylesheet -->
+      <link rel="stylesheet" href="style.css">
+      <!-- Moralis SDK code -->
+      <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+  </head>
+  <body>
+    <div class="container">
+        <div class="img-box">
+
+        </div>
+        <div class="content">
+            <h1><b>Decentralized</b><br> WebHosting Platform</h1>
+
+    <button id="btn-login" class="btn" onclick="login()">Login</button>
+
+    <input class="inp" type="file" name="fileInput" id="fileInput">
+    <br>
+    <input class="inp" type="text" name="projectName" id="projectName" placeholder="Project Name">
+    <br>
+    <textarea class="inp" placeholder="Project description" name="projectDescription" id="projectDescription" cols="30" rows="5"></textarea>
+    <br>
+    <button id="submit-btn" onclick="submit()" class="btn">Submit</button>
+   <div class="link-box">
+    <a id="web-url" href="" target="_blank"></a>
+    <a id="meta-url" href="" target="_blank"></a>
+   </div>
+    <div class="logos">
+        <p>Powered by</p>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c2/IPFS_logo.png" alt="ipfs" width="80px">
+        <img src="https://moralis.io/wp-content/uploads/2021/04/Moralis-Logo.svg" alt="moralis" width="40px">
+    </div>
+        </div>
+    </div>
+
+    <script>
+      // connect to Moralis server
+      const serverUrl = "https://jia8uhhivhhy.usemoralis.com:2053/server";
+      const appId = "T8e6cdk14lL3mhhkG3a7MnvtqbkS4bPHIQzRbugr";
+      Moralis.start({ serverUrl, appId });
+
+    //   constants
+    let loginBtn = document.getElementById("btn-login");
+    let submitBtn = document.getElementById("submit-btn");
+    let webUrl = document.getElementById("web-url");
+    let metaUrl = document.getElementById("meta-url");
+
+      // User Login
+      const login = async() => {
+          Moralis.authenticate().then(function (user) {
+          loginBtn.innerHTML = user.get('ethAddress');
+          console.log(user.get('ethAddress'))
+        });
+    }
+      
+
+      // upload the HTML
+      const uploadHTML = async() => {
+          const data = fileInput.files[0]
+          const file = new Moralis.File(data.name, data)
+          await file.saveIPFS();
+          console.log(file.ipfs(), file.hash());
+          webUrl.innerHTML = "Hosted Website Url";
+          webUrl.setAttribute("href", file.ipfs());
+          return file.ipfs();
+      }
+
+      // upload the metadata {name, description, html}
+      const uploadMetadata = async(ipfsUrl) => {
+        const name = document.getElementById("projectName").value;
+        const description = document.getElementById("projectDescription").value;
+
+        const metadata = {
+            "name" : name,
+            "descripton": description,
+            "html": ipfsUrl,
+        }       
+        const file = new Moralis.File("file.json", {base64 : btoa(JSON.stringify(metadata))});
+        await file.saveIPFS();
+
+        metaUrl.innerHTML = "Metadata Url";
+        metaUrl.setAttribute("href", file.ipfs());
+
+        console.log(file.ipfs());
+    }
+
+      // submit
+      const submit = async() => {
+          submitBtn.innerHTML = "Uploading..."
+          const htmlUrl = await uploadHTML();
+          await uploadMetadata(htmlUrl);
+          alert("Your website is successfully hosted");
+      }
+
+    </script>
+  </body>
+</html>
